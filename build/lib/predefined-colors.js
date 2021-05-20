@@ -55,4 +55,4 @@ defineColor("d6e44b", 0.45, 0.47, 8572, 55985);
 /**
  * The white spectrum [cold, warm] in Mireds, as defined in the app
  */
-exports.colorTemperatureRange = [250, 454];
+exports.colorTemperatureRange = [153, 497];

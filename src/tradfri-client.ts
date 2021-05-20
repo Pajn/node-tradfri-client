@@ -1075,7 +1075,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 
 		const newAccessory = accessory.clone();
-		newAccessory.lightList[0].merge(operation);
+		newAccessory.lightList[0].merge(operation, true);
 		const reference = accessory.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference

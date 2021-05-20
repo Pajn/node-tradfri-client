@@ -65,11 +65,10 @@ export class Light extends IPSODevice {
 	public saturation!: number; // 0-100%
 
 	@ipsoKey("5709")
-	@doNotSerialize
 	public colorX!: number; // int
 
 	@ipsoKey("5710")
-	@doNotSerialize
+	@required((me: Light, ref: Light) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
 	public colorY!: number; // int
 
 	// As of Gateway version v1.3.14, this is finally supported
@@ -164,6 +163,13 @@ export class Light extends IPSODevice {
 				const proxy = createRGBProxy(raw);
 				return super.createProxy(proxy.get, proxy.set);
 			}
+			case "none": {
+				// Some lights might only report color in CIE xy
+				if (this.colorX !== undefined && this.colorY !== undefined && this.spectrum === 'none') {
+					const proxy = createRGBCIExyProxy();
+					return super.createProxy(proxy.get, proxy.set);
+				}
+			}
 			default:
 				return this;
 		}
@@ -175,7 +181,7 @@ export class Light extends IPSODevice {
 	 * Ensures this instance is linked to a tradfri client and an accessory
 	 * @throws Throws an error if it isn't
 	 */
-	private ensureLink() {
+	public ensureLink() {
 		if (this.client == null) {
 			throw new Error("Cannot use the simplified API on devices which aren't linked to a client instance.");
 		}
@@ -208,7 +214,7 @@ export class Light extends IPSODevice {
 		});
 	}
 
-	private operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
+	public operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
 		this.ensureLink();
 		if (transitionTime != null) {
 			transitionTime = Math.max(0, transitionTime);
@@ -332,6 +338,14 @@ export class Light extends IPSODevice {
 		super.fixBuggedProperties();
 		// For some reason the gateway reports lights with brightness 1 after turning off
 		if (this.onOff === false && this.dimmer === MIN_BRIGHTNESS) this.dimmer = 0;
+		// Some lights might only report color in CIE xy
+		if (this.colorX !== undefined && this.colorY !== undefined && this.colorTemperature === undefined && !this.hasOwnProperty('hue')) {
+			const rgb = conversions.rgbFromCIExyY(this.colorX / MAX_COLOR, this.colorY / MAX_COLOR)
+			const hsv = conversions.rgbToHSV(rgb.r, rgb.g, rgb.b)
+			this.color = conversions.rgbToString(rgb.r, rgb.g, rgb.b)
+			this.hue = hsv.h
+			this.saturation = hsv.v
+		}
 		return this;
 	}
 }
@@ -345,7 +359,7 @@ const rgbRegex = /^[0-9A-Fa-f]{6}$/;
 
 /**
  * Creates a proxy for an RGB lamp,
- * which converts RGB color to CIE xy
+ * which converts RGB color to Hue / Saturation
  */
 function createRGBProxy(raw: boolean = false) {
 	function get(me: Light, key: PropertyKey) {
@@ -391,6 +405,82 @@ function createRGBProxy(raw: boolean = false) {
 						}
 					}
 				}
+				break;
+			}
+			default: (me as any)[key] = value;
+		}
+		return true;
+	}
+
+	return { get, set };
+}
+
+/**
+ * Creates a proxy for an RGB lamp,
+ * which converts RGB color to CIE xy
+ */
+function createRGBCIExyProxy() {
+	function get(me: Light, key: PropertyKey) {
+		switch (key) {
+			case "color": {
+				if (typeof me.color === "string" && rgbRegex.test(me.color)) {
+					// predefined color, return it
+					return me.color;
+				} else {
+					// calculate it from colorX/Y
+					const { r, g, b } = conversions.rgbFromCIExyY(me.colorX / MAX_COLOR, me.colorY / MAX_COLOR);
+					return conversions.rgbToString(r, g, b);
+				}
+			}
+			case "hue": {
+				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				const { h } = conversions.rgbToHSV(r, g, b);
+				return h;
+			}
+			case "saturation": {
+				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				const { s } = conversions.rgbToHSV(r, g, b);
+				return Math.round(s * 100);
+			}
+			default: return me[key as keyof Light];
+		}
+	}
+	function set(me: Light, key: PropertyKey, value: any, receiver: any) {
+		switch (key) {
+			case "color": {
+				if (predefinedColors.has(value)) {
+					// its a predefined color, use the predefined values
+					const definition = predefinedColors.get(value)!; // we checked with `has`
+					me.colorX = definition.colorX;
+					me.colorY = definition.colorY;
+				} else {
+					// only accept HEX colors
+					if (rgbRegex.test(value)) {
+						// calculate the X/Y values
+						const { r, g, b } = conversions.rgbFromString(value);
+						const { x, y } = conversions.rgbToCIExyY(r, g, b);
+						me.colorX = Math.round(x * MAX_COLOR);
+						me.colorY = Math.round(y * MAX_COLOR);
+					}
+				}
+				break;
+			}
+			case "hue": {
+				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				// tslint:disable-next-line:prefer-const
+				let { h, s, v } = conversions.rgbToHSV(r, g, b);
+				h = value;
+				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
+				set(me, "color", conversions.rgbToString(r, g, b), receiver);
+				break;
+			}
+			case "saturation": {
+				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				// tslint:disable-next-line:prefer-const
+				let { h, s, v } = conversions.rgbToHSV(r, g, b);
+				s = value / 100;
+				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
+				set(me, "color", conversions.rgbToString(r, g, b), receiver);
 				break;
 			}
 			default: (me as any)[key] = value;
