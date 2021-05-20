@@ -885,7 +885,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
-        newAccessory.lightList[0].merge(operation);
+        newAccessory.lightList[0].merge(operation, true);
         const reference = accessory.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference

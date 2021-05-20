@@ -81,6 +81,13 @@ class Light extends ipsoDevice_1.IPSODevice {
                 const proxy = createRGBProxy(raw);
                 return super.createProxy(proxy.get, proxy.set);
             }
+            case "none": {
+                // Some lights might only report color in CIE xy
+                if (this.colorX !== undefined && this.colorY !== undefined && this.spectrum === 'none') {
+                    const proxy = createRGBCIExyProxy();
+                    return super.createProxy(proxy.get, proxy.set);
+                }
+            }
             default:
                 return this;
         }
@@ -232,6 +239,14 @@ class Light extends ipsoDevice_1.IPSODevice {
         // For some reason the gateway reports lights with brightness 1 after turning off
         if (this.onOff === false && this.dimmer === MIN_BRIGHTNESS)
             this.dimmer = 0;
+        // Some lights might only report color in CIE xy
+        if (this.colorX !== undefined && this.colorY !== undefined && this.colorTemperature === undefined && !this.hasOwnProperty('hue')) {
+            const rgb = conversions_1.conversions.rgbFromCIExyY(this.colorX / predefined_colors_1.MAX_COLOR, this.colorY / predefined_colors_1.MAX_COLOR);
+            const hsv = conversions_1.conversions.rgbToHSV(rgb.r, rgb.g, rgb.b);
+            this.color = conversions_1.conversions.rgbToString(rgb.r, rgb.g, rgb.b);
+            this.hue = hsv.h;
+            this.saturation = hsv.v;
+        }
         return this;
     }
 }
@@ -267,12 +282,12 @@ __decorate([
 ], Light.prototype, "saturation", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5709"),
-    ipsoObject_1.doNotSerialize,
     __metadata("design:type", Number)
 ], Light.prototype, "colorX", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5710"),
-    ipsoObject_1.doNotSerialize,
+    ipsoObject_1.required((me, ref) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
+    ,
     __metadata("design:type", Number)
 ], Light.prototype, "colorY", void 0);
 __decorate([
@@ -324,7 +339,7 @@ const MIN_BRIGHTNESS = conversions_1.deserializers.brightness(1);
 const rgbRegex = /^[0-9A-Fa-f]{6}$/;
 /**
  * Creates a proxy for an RGB lamp,
- * which converts RGB color to CIE xy
+ * which converts RGB color to Hue / Saturation
  */
 function createRGBProxy(raw = false) {
     function get(me, key) {
@@ -374,6 +389,82 @@ function createRGBProxy(raw = false) {
                         }
                     }
                 }
+                break;
+            }
+            default: me[key] = value;
+        }
+        return true;
+    }
+    return { get, set };
+}
+/**
+ * Creates a proxy for an RGB lamp,
+ * which converts RGB color to CIE xy
+ */
+function createRGBCIExyProxy() {
+    function get(me, key) {
+        switch (key) {
+            case "color": {
+                if (typeof me.color === "string" && rgbRegex.test(me.color)) {
+                    // predefined color, return it
+                    return me.color;
+                }
+                else {
+                    // calculate it from colorX/Y
+                    const { r, g, b } = conversions_1.conversions.rgbFromCIExyY(me.colorX / predefined_colors_1.MAX_COLOR, me.colorY / predefined_colors_1.MAX_COLOR);
+                    return conversions_1.conversions.rgbToString(r, g, b);
+                }
+            }
+            case "hue": {
+                const { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
+                const { h } = conversions_1.conversions.rgbToHSV(r, g, b);
+                return h;
+            }
+            case "saturation": {
+                const { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
+                const { s } = conversions_1.conversions.rgbToHSV(r, g, b);
+                return Math.round(s * 100);
+            }
+            default: return me[key];
+        }
+    }
+    function set(me, key, value, receiver) {
+        switch (key) {
+            case "color": {
+                if (predefined_colors_1.predefinedColors.has(value)) {
+                    // its a predefined color, use the predefined values
+                    const definition = predefined_colors_1.predefinedColors.get(value); // we checked with `has`
+                    me.colorX = definition.colorX;
+                    me.colorY = definition.colorY;
+                }
+                else {
+                    // only accept HEX colors
+                    if (rgbRegex.test(value)) {
+                        // calculate the X/Y values
+                        const { r, g, b } = conversions_1.conversions.rgbFromString(value);
+                        const { x, y } = conversions_1.conversions.rgbToCIExyY(r, g, b);
+                        me.colorX = Math.round(x * predefined_colors_1.MAX_COLOR);
+                        me.colorY = Math.round(y * predefined_colors_1.MAX_COLOR);
+                    }
+                }
+                break;
+            }
+            case "hue": {
+                let { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
+                // tslint:disable-next-line:prefer-const
+                let { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
+                h = value;
+                ({ r, g, b } = conversions_1.conversions.rgbFromHSV(h, s, v));
+                set(me, "color", conversions_1.conversions.rgbToString(r, g, b), receiver);
+                break;
+            }
+            case "saturation": {
+                let { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
+                // tslint:disable-next-line:prefer-const
+                let { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
+                s = value / 100;
+                ({ r, g, b } = conversions_1.conversions.rgbFromHSV(h, s, v));
+                set(me, "color", conversions_1.conversions.rgbToString(r, g, b), receiver);
                 break;
             }
             default: me[key] = value;

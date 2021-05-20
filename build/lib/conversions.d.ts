@@ -1,4 +1,14 @@
 import { PropertyTransformKernel } from "./ipsoObject";
+declare function rgbToCIExyY(r: number, g: number, b: number): {
+    x: number;
+    y: number;
+    Y: number;
+};
+declare function rgbFromCIExyY(x: number, y: number, Y?: number): {
+    r: number;
+    g: number;
+    b: number;
+};
 declare function rgbToHSV(r: number, g: number, b: number): {
     h: number;
     s: number;
@@ -32,6 +42,8 @@ export declare const deserializers: {
     position: PropertyTransformKernel;
 };
 export declare const conversions: {
+    rgbFromCIExyY: typeof rgbFromCIExyY;
+    rgbToCIExyY: typeof rgbToCIExyY;
     rgbFromHSV: typeof rgbFromHSV;
     rgbToHSV: typeof rgbToHSV;
     rgbToString: typeof rgbToString;
