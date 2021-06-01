@@ -827,13 +827,12 @@ diff@^4.0.1, diff@^4.0.2:
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
 
-dns-packet@^1.1.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/dns-packet/-/dns-packet-1.3.1.tgz#12aa426981075be500b910eedcd0b47dd7deda5a"
-  integrity sha512-0UxfQkMhYAUaZI+xrNZOz/as5KgDU0M/fQ9b6SpkyLbk3GEswDi6PADJVaYJradtRVsRIlF1zLyOodbcTCDzUg==
+dns-packet@^5.2.2:
+  version "5.2.4"
+  resolved "https://registry.yarnpkg.com/dns-packet/-/dns-packet-5.2.4.tgz#e004f409eadfa8ec861964dcb9eb395884fcf67d"
+  integrity sha512-vgu5Bx5IV8mXmh/9cn1lzn+J7okFlXe1vBRp+kCBJXg1nBED6Z/Q4e+QaDxQRSozMr14p/VQmdXwsf/I2wGjUA==
   dependencies:
-    ip "^1.1.0"
-    safe-buffer "^5.0.1"
+    ip "^1.1.5"
 
 dts-bundle@^0.7.3:
   version "0.7.3"
@@ -1252,7 +1251,7 @@ ini@~1.3.0:
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
   integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
-ip@^1.1.0:
+ip@^1.1.5:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a"
   integrity sha1-vd7XARQpCCjAoDnnLvJfWq7ENUo=
@@ -1550,12 +1549,12 @@ make-error@^1.1.1:
   resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.6.tgz#2eb2e37ea9b67c4891f684a1394799af484cf7a2"
   integrity sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==
 
-mdns-server@^1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/mdns-server/-/mdns-server-1.0.9.tgz#17beca5412037f5348199c21d0d5b8aaecfbe6ea"
-  integrity sha512-b1F00LHqXL47Y9QTOtCJMnRIpZ7tmitY/FmckQq7P+2UY84MThDt4gCTg86EF6DV+Wl/QNdu07XYTKo0JYDGdw==
+mdns-server@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/mdns-server/-/mdns-server-1.0.10.tgz#6eaa4257818454aee6d7d77c46af251e00407d28"
+  integrity sha512-Qw0gcmeQD9nRHuTQw0MZJaFYhC7WfLVCJ1nGujCe+KXTKQUVSZsYx2i2RAAbo86HRJFs40lndzbt75NZG1sMnw==
   dependencies:
-    dns-packet "^1.1.1"
+    dns-packet "^5.2.2"
 
 merge-descriptors@~1.0.0:
   version "1.0.1"
