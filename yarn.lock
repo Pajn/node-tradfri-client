@@ -353,10 +353,17 @@ ajv@^6.12.3:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-alcalzone-shared@^3.0.1, alcalzone-shared@^3.0.2:
+alcalzone-shared@^3.0.1:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/alcalzone-shared/-/alcalzone-shared-3.0.2.tgz#e0c6380be679e1e8fc22b648c6fdba2d2d1b04d0"
   integrity sha512-kcXwSVaB19k3gbJoDqktD9nL2JyufbTThbk8LEL0xKY77TqoIWtraOrrGtRCihlqJPIyfacdFu//0X28ZfWPSg==
+  dependencies:
+    debug "^4.3.1"
+
+alcalzone-shared@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/alcalzone-shared/-/alcalzone-shared-4.0.0.tgz#7e0a0ad947b8ada966a76321bbedede24fe6c97b"
+  integrity sha512-UJ/8eEd4sZwjmMpV4PahmDS5U05UdqWPYJxT+a8xNOTqnNn4vgbuyFMNX1kSx2KKiwX3yJi5QkISS3kY7pXWfQ==
   dependencies:
     debug "^4.3.1"
 
